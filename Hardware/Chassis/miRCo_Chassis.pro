@@ -1,4 +1,4 @@
-update=3/9/2019 1:14:10 AM
+update=3/9/2019 1:18:50 AM
 version=1
 last_client=kicad
 [pcbnew]
@@ -23,9 +23,11 @@ ModuleOutlineThickness=0.150000000000
 [cvpcb]
 version=1
 NetIExt=net
+[general]
+version=1
 [eeschema]
 version=1
-LibDir=
+LibDir=../CONNEX_KICAD_LIBS/sch_libs
 [eeschema/libraries]
 LibName1=power
 LibName2=device
@@ -56,5 +58,16 @@ LibName26=opto
 LibName27=atmel
 LibName28=contrib
 LibName29=valves
-[general]
-version=1
+LibName30=connex_capacitors
+LibName31=connex_captouch
+LibName32=connex_connector
+LibName33=connex_device
+LibName34=CONNEX_DIODE
+LibName35=CONNEX_IC
+LibName36=CONNEX_INDUCTOR
+LibName37=connex_led
+LibName38=CONNEX_MCU
+LibName39=connex_mechanical
+LibName40=connex_mosfets
+LibName41=connex_Resistor
+LibName42=CONNEX_TP
