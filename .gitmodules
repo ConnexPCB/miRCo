@@ -1,0 +1,3 @@
+[submodule "Hardware/CONNEX_KICAD_LIBS"]
+	path = Hardware/CONNEX_KICAD_LIBS
+	url = https://github.com/ConnexPCB/CONNEX_KICAD_LIBS.git
