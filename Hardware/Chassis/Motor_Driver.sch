@@ -41,6 +41,7 @@ LIBS:connex_mechanical
 LIBS:connex_mosfets
 LIBS:connex_Resistor
 LIBS:CONNEX_TP
+LIBS:miRCo_Chassis-cache
 EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
