@@ -18,51 +18,9 @@
 
 #include "Motor.hpp"
 
-using asio::ip::udp;
+static const uint16_t BROADCAST_PORT = 1235;
 
-class server
-{
-public:
-  server(asio::io_context& io_context, short port)
-    : socket_(io_context, udp::endpoint(udp::v4(), port))
-  {
-    do_receive();
-  }
-
-  void do_receive()
-  {
-    socket_.async_receive_from(
-        asio::buffer(data_, max_length), sender_endpoint_,
-        [this](std::error_code ec, std::size_t bytes_recvd)
-        {
-          if (!ec && bytes_recvd > 0)
-          {
-            std::cout << data_ << std::endl;
-            do_send(bytes_recvd);
-          }
-          else
-          {
-            do_receive();
-          }
-        });
-  }
-
-  void do_send(std::size_t length)
-  {
-    socket_.async_send_to(
-        asio::buffer(data_, length), sender_endpoint_,
-        [this](std::error_code /*ec*/, std::size_t  bytes /*bytes_sent*/)
-        {
-          do_receive();
-        });
-  }
-
-private:
-  udp::socket socket_;
-  udp::endpoint sender_endpoint_;
-  enum { max_length = 1024 };
-  char data_[max_length];
-};
+float filter(float oldValue, float input, float alpha);
 
 extern "C" void asio_main()
 {
@@ -75,46 +33,60 @@ extern "C" void asio_main()
     */
 
     std::cout << "[Info] Initializing motor controller" << std::endl;
-    Motor m1{
+    Motor left{
       {MCPWM_UNIT_0, MCPWM0A, MCPWM_TIMER_0, MCPWM_OPR_A},
       {50, 1000, 2000}, 25
-    }, m2{
+    }, right{
       {MCPWM_UNIT_1, MCPWM1A, MCPWM_TIMER_1, MCPWM_OPR_A},
       {50, 1000, 2000}, 26
     };
 
-    std::cout << "[Info] Initializing start button" << std::endl;
+  asio::io_service ioService;
 
-    gpio_config_t gpioConfig;
-    gpioConfig.pin_bit_mask = 0x01;
-    gpioConfig.mode = GPIO_MODE_INPUT;
-    gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
-    gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
-    gpioConfig.intr_type = GPIO_INTR_DISABLE;
-    gpio_config(&gpioConfig);
+  asio::ip::udp::socket socket(ioService);
+  asio::ip::udp::endpoint recvEndpoint(asio::ip::udp::v4(), 1234);
 
-    std::cout << "[Info] Waiting for start button" << std::endl;
-    while(gpio_get_level(GPIO_NUM_0) == 1);
+  socket.open(asio::ip::udp::v4());
+  socket.set_option(asio::socket_base::broadcast(true));
+  socket.set_option(asio::socket_base::reuse_address(true));
+  socket.bind(recvEndpoint);
 
-    std::cout << "[Info] Starting motor control loop" << std::endl;
+  std::cout << "[Info] Starting UDP speed server" << std::endl;
 
-    float speed = 0.;
-    int dir = 1;
-    while(true) {
-      speed += dir*0.01f;
-      if(speed >= 1.f) {
-        speed = 1.f;
-        dir = -1;
-      }
-      else if(speed <= 0.f) {
-        speed = 0.f;
-        dir = 1;
-      }
+  std::thread broadcastThread([&socket](){ 
+    std::array<uint8_t, 6> id{0, 0, 0, 0, 0, 0};
+    asio::ip::udp::endpoint broadcastEndpoint{asio::ip::address_v4::broadcast(),
+      BROADCAST_PORT};;//{asio::ip::address::from_string("192.168.4.255"), BROADCAST_PORT}; 
 
-      m1.setSpeed(speed);
-      m2.setSpeed(speed);
-      std::cout << "[Info] Setting speed to " << speed << std::endl;
+    for(;;) {
+      std::cout << "[Info] Sending broadcast discovery datagram" << std::endl;
+      socket.send_to(asio::buffer(id), broadcastEndpoint);
 
-      vTaskDelay(5);
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     }
+  });
+
+  float leftSpeed = 0.f, rightSpeed = 0.f;
+
+  while(true) {
+    std::array<int8_t, 2048> recvData;
+    auto len = socket.receive_from(asio::buffer(recvData), recvEndpoint);
+
+    if(len != 2) {
+      std::cerr << "[Error] Received invalid data (length = " << len << ")" << std::endl;
+    }
+    else {
+      leftSpeed = filter(leftSpeed, recvData[0], 0.07f);
+      rightSpeed = filter(rightSpeed, recvData[1], 0.07f); //Big ESC
+
+      std::cout << "[Info] Received speed update: " << leftSpeed << ", " << rightSpeed << std::endl;
+
+      left.setSpeed(std::max(0, static_cast<int>(leftSpeed+45)) / 55.f / 4.f);
+      right.setSpeed(std::max(0, static_cast<int>(rightSpeed+10)) / 90.f / 4.f); //Big ESC
+    }
+  }
+}
+
+float filter(float oldValue, float newValue, float alpha) {
+  return newValue*alpha + oldValue*(1.f - alpha);
 }

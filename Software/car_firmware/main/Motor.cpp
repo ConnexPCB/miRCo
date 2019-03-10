@@ -15,6 +15,8 @@ Motor::Motor(const PWMSettings& pwmSettings, const PPMSettings& ppmSettings, int
   pwmConfig.counter_mode = MCPWM_UP_COUNTER;
   pwmConfig.duty_mode = MCPWM_DUTY_MODE_0;
   mcpwm_init(m_pwmSettings.unit, m_pwmSettings.timer, &pwmConfig);
+
+  setSpeed(0.f);
 }
 
 Motor::~Motor() {
