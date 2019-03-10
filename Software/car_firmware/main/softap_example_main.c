@@ -21,8 +21,8 @@
 
 void asio_main();
 
-#define EXAMPLE_ESP_WIFI_SSID      "RACECAR"
-#define EXAMPLE_ESP_WIFI_PASS      "RACECAR1"
+#define EXAMPLE_ESP_WIFI_SSID      "racecar"
+#define EXAMPLE_ESP_WIFI_PASS      "3ricn3t1"
 #define EXAMPLE_MAX_STA_CONN       4
 
 /* FreeRTOS event group to signal when we are connected*/
