@@ -46,7 +46,7 @@ EELAYER 25 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 3
+Sheet 3 3
 Title ""
 Date ""
 Rev ""
@@ -56,16 +56,4 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Sheet
-S 3450 1300 1950 2125
-U 5C84B197
-F0 "Power" 60
-F1 "Power.sch" 60
-$EndSheet
-$Sheet
-S 1375 1300 1950 2125
-U 5C84ACD0
-F0 "Motor_Driver" 60
-F1 "Motor_Driver.sch" 60
-$EndSheet
 $EndSCHEMATC
