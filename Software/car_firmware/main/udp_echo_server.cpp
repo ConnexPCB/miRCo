@@ -64,7 +64,7 @@ private:
   char data_[max_length];
 };
 
-void asio_main()
+extern "C" void asio_main()
 {
   /*
     asio::io_context io_context;
@@ -83,12 +83,25 @@ void asio_main()
       {50, 1000, 2000}, 26
     };
 
+    std::cout << "[Info] Initializing start button" << std::endl;
+
+    gpio_config_t gpioConfig;
+    gpioConfig.pin_bit_mask = 0x01;
+    gpioConfig.mode = GPIO_MODE_INPUT;
+    gpioConfig.pull_up_en = GPIO_PULLUP_DISABLE;
+    gpioConfig.pull_down_en = GPIO_PULLDOWN_DISABLE;
+    gpioConfig.intr_type = GPIO_INTR_DISABLE;
+    gpio_config(&gpioConfig);
+
+    std::cout << "[Info] Waiting for start button" << std::endl;
+    while(gpio_get_level(GPIO_NUM_0) == 1);
+
     std::cout << "[Info] Starting motor control loop" << std::endl;
 
     float speed = 0.;
     int dir = 1;
     while(true) {
-      speed += dir*0.05f;
+      speed += dir*0.01f;
       if(speed >= 1.f) {
         speed = 1.f;
         dir = -1;
